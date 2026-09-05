@@ -1,0 +1,26 @@
+[Unit]
+Description=Open WebUI Docker Container
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=0
+
+ExecStartPre=-/usr/bin/docker network create app-net
+ExecStartPre=-/usr/bin/docker stop -t 30 open-webui
+ExecStartPre=-/usr/bin/docker rm open-webui
+
+ExecStart=/usr/bin/docker run -d --name open-webui --restart always \
+  --network app-net \
+  --add-host=host.docker.internal:host-gateway \
+  --env-file /etc/open-webui/webui.env \
+  -p 3000:8080 \
+  -v open-webui:/app/backend/data \
+  ghcr.io/open-webui/open-webui:main
+ExecStop=/usr/bin/docker stop -t 30 open-webui
+
+[Install]
+WantedBy=multi-user.target
