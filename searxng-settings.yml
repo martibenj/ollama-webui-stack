@@ -1,7 +1,7 @@
 use_default_settings: true
 
 server:
-  secret_key: "<generate one, e.g. openssl rand -hex 32>"
+  secret_key: "REPLACE_ME"
   limiter: false
   image_proxy: true
 

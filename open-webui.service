@@ -1,8 +1,8 @@
 [Unit]
 Description=Open WebUI Docker Container
-After=network-online.target docker.service
-Wants=network-online.target
+After=docker.service network-online.target ollama.service
 Requires=docker.service
+Wants=network-online.target
 
 [Service]
 Type=oneshot
@@ -15,9 +15,15 @@ ExecStartPre=-/usr/bin/docker rm open-webui
 
 ExecStart=/usr/bin/docker run -d --name open-webui --restart always \
   --network app-net \
-  --add-host=host.docker.internal:host-gateway \
-  --env-file /etc/open-webui/webui.env \
-  -p 3000:8080 \
+  -p 3100:8080 \
+  -e BYPASS_MODEL_ACCESS_CONTROL=true \
+  -e ENABLE_WEB_SEARCH=true \
+  -e OLLAMA_BASE_URL=http://ollama:11434 \
+  -e SEARXNG_QUERY_URL"=http://searxng:8080/search?q=<query>" \
+  -e WEB_SEARCH_CONCURRENT_REQUESTS=10 \
+  -e WEB_SEARCH_ENGINE=searxng \
+  -e WEB_SEARCH_RESULT_COUNT=3 \
+  --env-file /etc/ollama-webui-stack/webui.env \
   -v open-webui:/app/backend/data \
   ghcr.io/open-webui/open-webui:main
 ExecStop=/usr/bin/docker stop -t 30 open-webui
