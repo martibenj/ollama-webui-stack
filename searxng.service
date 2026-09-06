@@ -1,8 +1,8 @@
 [Unit]
 Description=SearXNG container
-After=network-online.target docker.service
-Wants=network-online.target
 Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
@@ -15,10 +15,11 @@ ExecStartPre=-/usr/bin/docker rm searxng
 
 ExecStart=/usr/bin/docker run -d --name searxng --restart always \
   --network app-net \
-  -v /opt/searxng/config:/etc/searxng \
+  -v /etc/ollama-webui-stack/searxng:/etc/searxng \
   -e "BASE_URL=http://searxng:8080/" \
   -e "INSTANCE_NAME=my-searxng" \
   searxng/searxng
+
 ExecStop=/usr/bin/docker stop -t 10 searxng
 
 [Install]

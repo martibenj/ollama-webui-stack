@@ -1,15 +1,27 @@
 [Unit]
-Description=Ollama Service
-After=network-online.target
+Description=Ollama Docker Container
+After=docker.service network-online.target
+Requires=docker.service
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/ollama serve
-User=ollama
-Group=ollama
-Restart=always
-RestartSec=3
-Environment="OLLAMA_HOST=0.0.0.0:11434"
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=0
+
+ExecStartPre=-/usr/bin/docker network create app-net
+ExecStartPre=-/usr/bin/docker stop -t 30 ollama
+ExecStartPre=-/usr/bin/docker rm ollama
+
+ExecStart=/usr/bin/docker run -d --name ollama --restart always \
+  -e OLLAMA_CONTEXT_LENGTH=8192 \
+  --network app-net \
+  --gpus=all \
+  -p 0.0.0.0:11434:11434 \
+  -v ollama-models:/root/.ollama \
+  ollama/ollama
+
+ExecStop=/usr/bin/docker stop -t 30 ollama
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
